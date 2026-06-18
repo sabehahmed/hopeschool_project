@@ -1,0 +1,86 @@
+{% extends 'earlywarning/base.html' %}
+{% block title %}Bulk Upload{% endblock %}
+{% block page_title %}Bulk Upload Students{% endblock %}
+{% block topbar_actions %}
+  <a href="{% url 'student_list' %}" class="btn btn-outline btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+
+  <!-- Instructions -->
+  <div class="card" style="padding:22px">
+    <div class="card-title" style="margin-bottom:14px"><i class="bi bi-info-circle-fill"></i> CSV Format Required</div>
+    <div style="background:var(--bg);border-radius:8px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);overflow-x:auto;border:1px solid var(--border)">
+      first_name,last_name,date_of_birth,school,grade,region,status
+    </div>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px">
+        <i class="bi bi-check-circle" style="color:var(--green-light)"></i>
+        <span><strong>date_of_birth</strong> format: YYYY-MM-DD</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px">
+        <i class="bi bi-check-circle" style="color:var(--green-light)"></i>
+        <span><strong>region</strong>: tunis, sfax, sousse, kairouan, bizerte, nabeul, other</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px">
+        <i class="bi bi-check-circle" style="color:var(--green-light)"></i>
+        <span><strong>status</strong>: active, inactive, transferred, dropped_out</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload form -->
+  <div class="card" style="padding:28px">
+    <div class="card-title" style="margin-bottom:20px"><i class="bi bi-upload"></i> Upload CSV File</div>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div style="border:2px dashed var(--border);border-radius:10px;padding:40px;text-align:center;margin-bottom:20px;transition:border-color 0.2s" id="drop-zone">
+        <i class="bi bi-file-earmark-arrow-up" style="font-size:36px;color:var(--green-light)"></i>
+        <div style="margin-top:10px;font-size:14px;font-weight:600">Drop your CSV file here</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">or click to browse</div>
+        <input type="file" name="csv_file" accept=".csv" required
+               style="position:absolute;inset:0;opacity:0;cursor:pointer" id="file-input">
+        <div id="file-name" style="margin-top:12px;font-size:12px;color:var(--green);font-weight:500"></div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%">
+        <i class="bi bi-upload"></i> Import Students
+      </button>
+    </form>
+  </div>
+
+  {% if results %}
+  <div class="card" style="padding:22px">
+    <div class="card-title" style="margin-bottom:14px"><i class="bi bi-clipboard-data"></i> Import Results</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div style="background:var(--green-pale);border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:24px;font-weight:700;color:var(--green-light)">{{ results.created }}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Students Created</div>
+      </div>
+      <div style="background:#fdecea;border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:24px;font-weight:700;color:var(--red)">{{ results.errors|length }}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Errors</div>
+      </div>
+    </div>
+    {% if results.errors %}
+    <div style="font-size:12px;color:var(--red)">
+      {% for err in results.errors %}
+      <div style="padding:4px 0;border-bottom:1px solid var(--border)">⚠ {{ err }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<script>
+const input = document.getElementById('file-input');
+const label = document.getElementById('file-name');
+const zone  = document.getElementById('drop-zone');
+input.style.position = 'relative';
+zone.style.position  = 'relative';
+input.addEventListener('change', () => {
+  if (input.files[0]) label.textContent = '✓ ' + input.files[0].name;
+});
+</script>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'earlywarning/base.html' %}
+{% block title %}Students{% endblock %}
+{% block page_title %}Students{% endblock %}
+{% block topbar_actions %}
+  <a href="{% url 'student_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-person-plus"></i> Add Student</a>
+  <a href="{% url 'bulk_upload' %}" class="btn btn-outline btn-sm"><i class="bi bi-upload"></i> Bulk Upload</a>
+{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card" style="padding:16px 22px;margin-bottom:16px">
+  <form method="get" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <input name="q" class="form-control" style="width:220px" placeholder="🔍  Search name / school..." value="{{ filters.q }}">
+    <select name="region" class="form-control form-select" style="width:160px">
+      <option value="">All Regions</option>
+      {% for v,l in region_choices %}<option value="{{ v }}" {% if filters.region == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select>
+    <select name="status" class="form-control form-select" style="width:140px">
+      <option value="">All Statuses</option>
+      {% for v,l in status_choices %}<option value="{{ v }}" {% if filters.status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-funnel"></i> Filter</button>
+    <a href="{% url 'student_list' %}" class="btn btn-outline btn-sm"><i class="bi bi-x"></i> Reset</a>
+  </form>
+</div>
+
+<!-- Table -->
+<div class="card" style="padding:22px">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>School</th>
+          <th>Grade</th>
+          <th>Region</th>
+          <th style="text-align:center">Absences (30d)</th>
+          <th>Risk</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for s in page %}
+      <tr>
+        <td>
+          <a href="{% url 'student_detail' s.pk %}" style="font-weight:600;color:var(--green);text-decoration:none">
+            {{ s.last_name }}, {{ s.first_name }}
+          </a>
+        </td>
+        <td style="color:var(--muted);font-size:12px">{{ s.school }}</td>
+        <td style="font-size:12px">{{ s.grade }}</td>
+        <td style="font-size:12px">{{ s.get_region_display }}</td>
+        <td style="text-align:center">
+          <span style="font-family:'JetBrains Mono',monospace;font-weight:600;color:{% if s.recent_absence_count >= 7 %}var(--red){% elif s.recent_absence_count >= 4 %}var(--orange){% else %}var(--green-light){% endif %}">
+            {{ s.recent_absence_count }}
+          </span>
+        </td>
+        <td><span class="badge badge-{{ s.current_risk_level }}">{{ s.current_risk_level|upper }}</span></td>
+        <td><span class="badge badge-{{ s.status }}">{{ s.status }}</span></td>
+        <td style="display:flex;gap:6px">
+          <a href="{% url 'student_detail' s.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-eye"></i></a>
+          <a href="{% url 'student_edit' s.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-pencil"></i></a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px">
+        <i class="bi bi-search" style="font-size:24px"></i>
+        <div style="margin-top:8px;font-size:13px">No students found.</div>
+      </td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if page.has_other_pages %}
+  <div class="pagination">
+    {% if page.has_previous %}
+    <a href="?page={{ page.previous_page_number }}" class="page-btn"><i class="bi bi-chevron-left"></i></a>
+    {% endif %}
+    <span class="page-btn active">{{ page.number }} / {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}
+    <a href="?page={{ page.next_page_number }}" class="page-btn"><i class="bi bi-chevron-right"></i></a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'earlywarning/base.html' %}
+{% block title %}Admin Config{% endblock %}
+{% block page_title %}⚙️ Admin Configuration{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-5">
+    <div class="card kpi-card p-3">
+      <h6 class="fw-bold border-bottom pb-2 mb-3">👥 User Accounts</h6>
+      <table class="table table-sm">
+        <thead class="table-light"><tr><th>Username</th><th>Staff</th><th>Groups</th><th>Active</th></tr></thead>
+        <tbody>
+        {% for u in all_users %}
+        <tr>
+          <td class="fw-semibold">{{ u.username }}</td>
+          <td>{% if u.is_staff %}✅{% else %}—{% endif %}</td>
+          <td class="text-muted small">{% for g in u.groups.all %}{{ g.name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+          <td>{% if u.is_active %}✅{% else %}❌{% endif %}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <a href="/admin/" class="btn btn-sm btn-outline-secondary w-100 mt-2">Open Django Admin</a>
+    </div>
+  </div>
+  <div class="col-md-7">
+    <div class="card kpi-card p-3">
+      <h6 class="fw-bold border-bottom pb-2 mb-3">🕑 Full Audit Log (50 latest)</h6>
+      <div style="max-height:500px;overflow-y:auto">
+      {% for log in all_logs %}
+      <div class="small py-1 border-bottom d-flex justify-content-between">
+        <div>
+          <span class="badge {% if log.result == 'blocked' %}bg-danger{% elif log.result == 'failure' %}bg-warning text-dark{% else %}bg-success{% endif %} me-1">{{ log.result }}</span>
+          <strong>{{ log.get_action_display }}</strong>
+          {% if log.detail %}<span class="text-muted"> · {{ log.detail|truncatechars:60 }}</span>{% endif %}
+        </div>
+        <span class="text-muted text-nowrap ms-2">{{ log.timestamp|date:"d M H:i" }} · {{ log.user.username|default:"sys" }}</span>
+      </div>
+      {% empty %}<p class="text-muted small">No log entries.</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

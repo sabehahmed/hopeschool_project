@@ -1,0 +1,126 @@
+{% extends 'earlywarning/base.html' %}
+{% block title %}Supervisor Panel{% endblock %}
+{% block page_title %}Supervisor Panel{% endblock %}
+{% block topbar_actions %}
+  <a href="{% url 'compute_all_risks' %}" class="btn btn-primary btn-sm"><i class="bi bi-cpu"></i> Compute All Risks</a>
+  <a href="{% url 'export_report' %}" class="btn btn-outline btn-sm"><i class="bi bi-download"></i> Export CSV</a>
+{% endblock %}
+
+{% block content %}
+<!-- High risk students -->
+<div class="card" style="padding:22px;margin-bottom:20px">
+  <div class="card-header-bar">
+    <div class="card-title"><i class="bi bi-exclamation-triangle-fill" style="color:var(--red)"></i> High Risk Students</div>
+    <span class="badge badge-high">{{ high_risk_students|length }} students</span>
+  </div>
+  {% if high_risk_students %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Student</th><th>School</th><th>Absences</th><th>Score</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for s in high_risk_students %}
+      <tr>
+        <td><a href="{% url 'student_detail' s.pk %}" style="font-weight:600;color:var(--green);text-decoration:none">{{ s.first_name }} {{ s.last_name }}</a></td>
+        <td style="color:var(--muted);font-size:12px">{{ s.school }}</td>
+        <td><span style="font-weight:700;color:var(--red)">{{ s.recent_absence_count }}</span></td>
+        <td>
+          {% with s.risk_scores.first as rs %}
+          {% if rs %}
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="height:6px;width:80px;background:var(--border);border-radius:4px">
+              <div style="height:6px;border-radius:4px;width:{{ rs.score|floatformat:0 }}%;background:var(--red)"></div>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px">{{ rs.score }}</span>
+          </div>
+          {% endif %}
+          {% endwith %}
+        </td>
+        <td style="display:flex;gap:6px">
+          <a href="{% url 'student_detail' s.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-eye"></i></a>
+          <a href="{% url 'intervention_create' s.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Plan</a>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:30px;color:var(--muted)">
+    <i class="bi bi-check-circle" style="font-size:28px;color:var(--green-light)"></i>
+    <div style="font-size:13px;margin-top:8px">No high risk students ✅</div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Open alerts -->
+<div class="card" style="padding:22px;margin-bottom:20px">
+  <div class="card-header-bar">
+    <div class="card-title"><i class="bi bi-bell-fill" style="color:var(--orange)"></i> Open Alerts</div>
+    <span class="badge badge-medium">{{ open_alerts|length }} alerts</span>
+  </div>
+  {% if open_alerts %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Student</th><th>Level</th><th>Message</th><th>Created</th><th></th></tr></thead>
+      <tbody>
+      {% for alert in open_alerts %}
+      <tr>
+        <td><a href="{% url 'student_detail' alert.student.pk %}" style="font-weight:600;color:var(--green);text-decoration:none">{{ alert.student.first_name }} {{ alert.student.last_name }}</a></td>
+        <td><span class="badge badge-{{ alert.level }}">{{ alert.level|upper }}</span></td>
+        <td style="font-size:12px;color:var(--muted);max-width:300px">{{ alert.message|truncatechars:80 }}</td>
+        <td style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">{{ alert.created_at|date:"d M H:i" }}</td>
+        <td>
+          <form method="post" action="{% url 'resolve_alert' alert.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline btn-sm"><i class="bi bi-check"></i> Resolve</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:30px;color:var(--muted)">
+    <i class="bi bi-bell-slash" style="font-size:28px;color:var(--green-light)"></i>
+    <div style="font-size:13px;margin-top:8px">No open alerts.</div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Active intervention plans -->
+<div class="card" style="padding:22px">
+  <div class="card-title" style="margin-bottom:18px"><i class="bi bi-clipboard-check-fill"></i> Active Intervention Plans</div>
+  {% if active_plans %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Student</th><th>State</th><th>Description</th><th>Created</th><th></th></tr></thead>
+      <tbody>
+      {% for plan in active_plans %}
+      <tr>
+        <td><a href="{% url 'student_detail' plan.student.pk %}" style="font-weight:600;color:var(--green);text-decoration:none">{{ plan.student.first_name }} {{ plan.student.last_name }}</a></td>
+        <td>
+          <span class="badge badge-{% if plan.state == 'draft' %}draft{% elif plan.state == 'active' %}low{% elif plan.state == 'follow_up' %}medium{% else %}closed{% endif %}">
+            {{ plan.state|upper }}
+          </span>
+        </td>
+        <td style="font-size:12px;color:var(--muted);max-width:280px">{{ plan.description|truncatechars:70 }}</td>
+        <td style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">{{ plan.created_at|date:"d M Y" }}</td>
+        <td>
+          {% if plan.state != 'closed' %}
+          <a href="{% url 'intervention_update' plan.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-arrow-right-circle"></i></a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:30px;color:var(--muted)">
+    <i class="bi bi-clipboard" style="font-size:28px"></i>
+    <div style="font-size:13px;margin-top:8px">No active plans.</div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

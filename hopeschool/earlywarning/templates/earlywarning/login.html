@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login — HopeSchool</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green-dark:  #be42f0;
+    --green-mid:   #c796c4;
+    --green-light: #e7c6e2;
+    --gold:        #ebbfe5;
+    --cream:       #f9f5ee;
+    --text-dark:   #1a1a1a;
+    --text-muted:  #6b7280;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--green-dark);
+    overflow: hidden;
+  }
+
+  /* ── Left panel ── */
+  .left {
+    width: 55%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px;
+    background: linear-gradient(145deg, #dda7df 0%, #927199 60%, #550d55 100%);
+    overflow: hidden;
+  }
+
+  /* geometric decoration */
+  .left::before {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    border: 80px solid rgba(201,168,76,0.08);
+    top: -120px; right: -120px;
+  }
+  .left::after {
+    content: '';
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    border: 50px solid rgba(255,255,255,0.04);
+    bottom: -80px; left: 30px;
+  }
+
+  .badge-top {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(201,168,76,0.15);
+    border: 1px solid rgba(201,168,76,0.3);
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 7px 16px;
+    border-radius: 50px;
+    width: fit-content;
+    margin-bottom: 36px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .brand {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(42px, 5vw, 64px);
+    color: #fff;
+    line-height: 1.05;
+    margin-bottom: 20px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .brand span { color: var(--gold); }
+
+  .tagline {
+    font-size: 15px;
+    color: rgba(255,255,255,0.55);
+    font-weight: 300;
+    line-height: 1.7;
+    max-width: 360px;
+    margin-bottom: 52px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .stats {
+    display: flex;
+    gap: 36px;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+  .stat-item { }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    color: #fff;
+    line-height: 1;
+  }
+  .stat-num span { color: var(--gold); font-size: 20px; }
+  .stat-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* floating dots */
+  .dots {
+    position: absolute;
+    bottom: 40px; right: 40px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    opacity: 0.15;
+  }
+  .dots span {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: #fff;
+    display: block;
+  }
+
+  /* ── Right panel ── */
+  .right {
+    width: 45%;
+    background: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 56px;
+    animation: slideIn 0.7s 0.1s ease both;
+  }
+
+  .form-wrap { width: 100%; max-width: 360px; }
+
+  .form-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+  }
+  .form-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 36px;
+  }
+
+  .field { margin-bottom: 20px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .field input {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid #e5e0d8;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text-dark);
+    background: #fff;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field input:focus {
+    border-color: var(--green-light);
+    box-shadow: 0 0 0 3px rgba(45,176,102,0.12);
+  }
+  .field-error {
+    font-size: 12px;
+    color: #e53e3e;
+    margin-top: 5px;
+  }
+
+  .btn-login {
+    width: 100%;
+    padding: 14px;
+    background: var(--green-dark);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    margin-top: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-login::after {
+    content: '→';
+    position: absolute;
+    right: 20px;
+    top: 50%; transform: translateY(-50%);
+    font-size: 16px;
+    opacity: 0.6;
+  }
+  .btn-login:hover {
+    background: var(--green-mid);
+    transform: translateY(-1px);
+  }
+  .btn-login:active { transform: translateY(0); }
+
+  .demo-box {
+    margin-top: 28px;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1.5px dashed #d9d3c8;
+    border-radius: 10px;
+  }
+  .demo-box-title {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .demo-accounts {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .demo-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+  .demo-role {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .role-op  { background: #e8f5e9; color: #2e7d32; }
+  .role-sup { background: #fff3e0; color: #e65100; }
+  .role-adm { background: #fce4ec; color: #c62828; }
+  .demo-creds { color: var(--text-muted); font-family: monospace; font-size: 12px; }
+
+  /* animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  @media (max-width: 768px) {
+    body { flex-direction: column; overflow: auto; }
+    .left { width: 100%; padding: 40px 30px; min-height: 280px; }
+    .right { width: 100%; padding: 40px 24px; }
+    .stats { gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LEFT -->
+<div class="left">
+  <div class="badge-top">
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+      <circle cx="5" cy="5" r="4" fill="#c9a84c"/>
+    </svg>
+    Tunisia · Early Warning System
+  </div>
+
+  <h1 class="brand">Hope<span>School</span></h1>
+
+  <p class="tagline">
+    An intelligent platform to detect at-risk students early and guide intervention teams with AI-powered insights.
+  </p>
+
+  <div class="stats">
+    <div class="stat-item">
+      <div class="stat-num">3<span>+</span></div>
+      <div class="stat-label">User Roles</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">AI<span>✦</span></div>
+      <div class="stat-label">Powered</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">30<span>d</span></div>
+      <div class="stat-label">Risk Window</div>
+    </div>
+  </div>
+
+  <div class="dots">
+    {% for i in "12345678901234567890" %}
+    <span></span>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+  <div class="form-wrap">
+    <h2 class="form-title">Welcome back</h2>
+    <p class="form-subtitle">Sign in to your account to continue</p>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="field">
+        <label>Username</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+          <div class="field-error">{{ form.username.errors }}</div>
+        {% endif %}
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        {{ form.password }}
+        {% if form.non_field_errors %}
+          <div class="field-error">{{ form.non_field_errors }}</div>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn-login">Sign In</button>
+    </form>
+
+    <div class="demo-box">
+      <div class="demo-box-title">Demo Accounts</div>
+      <div class="demo-accounts">
+        <div class="demo-row">
+          <span class="demo-role role-op">Operator</span>
+          <span class="demo-creds">operator / operator123</span>
+        </div>
+        <div class="demo-row">
+          <span class="demo-role role-sup">Supervisor</span>
+          <span class="demo-creds">supervisor / supervisor123</span>
+        </div>
+        <div class="demo-row">
+          <span class="demo-role role-adm">Admin</span>
+          <span class="demo-creds">admin / admin123</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,170 @@
+{% extends 'earlywarning/base.html' %}
+{% block title %}{{ student }}{% endblock %}
+{% block page_title %}{{ student.first_name }} {{ student.last_name }}{% endblock %}
+{% block topbar_actions %}
+  <a href="{% url 'absence_create_for_student' student.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-calendar-x"></i> + Absence</a>
+  {% if role in 'supervisor admin' %}
+  <a href="{% url 'compute_risk' student.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-cpu"></i> Compute Risk</a>
+  <a href="{% url 'ai_analysis' student.pk %}" class="btn btn-gold btn-sm"><i class="bi bi-stars"></i> AI Analysis</a>
+  <a href="{% url 'intervention_create' student.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> + Intervention</a>
+  {% endif %}
+  <a href="{% url 'student_edit' student.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-pencil"></i> Edit</a>
+  {% if role == 'admin' %}
+  <a href="{% url 'student_delete' student.pk %}" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start">
+
+  <!-- Left column -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+
+    <!-- Profile card -->
+    <div class="card" style="padding:22px">
+      <!-- Avatar header -->
+      <div style="text-align:center;padding-bottom:18px;border-bottom:1px solid var(--border);margin-bottom:18px">
+        <div style="width:64px;height:64px;border-radius:16px;background:var(--green);display:inline-flex;align-items:center;justify-content:center;font-size:26px;color:#fff;font-weight:700;margin-bottom:10px">
+          {{ student.first_name|first|upper }}{{ student.last_name|first|upper }}
+        </div>
+        <div style="font-size:15px;font-weight:700">{{ student.first_name }} {{ student.last_name }}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">{{ student.school }} — {{ student.grade }}</div>
+        <div style="margin-top:10px;display:flex;gap:8px;justify-content:center">
+          <span class="badge badge-{{ student.current_risk_level }}">
+            <i class="bi bi-shield-fill"></i> {{ student.current_risk_level|upper }} RISK
+          </span>
+          <span class="badge badge-{{ student.status }}">{{ student.status }}</span>
+        </div>
+      </div>
+
+      <!-- Info rows -->
+      {% for label, value in student_info %}
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="color:var(--muted)">{{ label }}</span>
+        <span style="font-weight:500">{{ value }}</span>
+      </div>
+      {% empty %}
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="color:var(--muted)">Date of birth</span>
+        <span style="font-weight:500">{{ student.date_of_birth }} (age {{ student.age }})</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="color:var(--muted)">Region</span>
+        <span style="font-weight:500">{{ student.get_region_display }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px">
+        <span style="color:var(--muted)">Absences (30d)</span>
+        <span style="font-weight:700;color:{% if student.recent_absence_count >= 7 %}var(--red){% elif student.recent_absence_count >= 4 %}var(--orange){% else %}var(--green-light){% endif %}">
+          {{ student.recent_absence_count }}
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Risk History -->
+    <div class="card" style="padding:22px">
+      <div class="card-title" style="margin-bottom:14px"><i class="bi bi-graph-up-arrow"></i> Risk History</div>
+      {% for rs in risk_scores %}
+      <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span class="badge badge-{{ rs.level }}">{{ rs.level|upper }}</span>
+          <span style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">{{ rs.computed_at }}</span>
+        </div>
+        <!-- Score bar -->
+        <div style="height:4px;background:var(--border);border-radius:4px;margin:6px 0">
+          <div style="height:4px;border-radius:4px;width:{{ rs.score|floatformat:0 }}%;background:{% if rs.level == 'high' %}var(--red){% elif rs.level == 'medium' %}var(--orange){% else %}var(--green-light){% endif %}"></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted)">{{ rs.explanation }}</div>
+      </div>
+      {% empty %}
+      <p style="font-size:12px;color:var(--muted);text-align:center;padding:16px 0">No risk scores yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Right column -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+
+    <!-- Absences table -->
+    <div class="card" style="padding:22px">
+      <div class="card-header-bar">
+        <div class="card-title"><i class="bi bi-calendar-x-fill"></i> Recent Absences</div>
+        <a href="{% url 'absence_create_for_student' student.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-plus"></i> Add</a>
+      </div>
+      {% if absences %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Justified</th><th>Notes</th><th>Recorded By</th></tr>
+          </thead>
+          <tbody>
+          {% for a in absences %}
+          <tr>
+            <td><span style="font-family:'JetBrains Mono',monospace;font-size:12px">{{ a.date }}</span></td>
+            <td>
+              {% if a.justified %}
+              <span class="badge badge-low"><i class="bi bi-check"></i> Yes</span>
+              {% else %}
+              <span class="badge badge-high"><i class="bi bi-x"></i> No</span>
+              {% endif %}
+            </td>
+            <td style="color:var(--muted);font-size:12px">{{ a.notes|default:"—" }}</td>
+            <td style="color:var(--muted);font-size:12px">{{ a.recorded_by|default:"—" }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:30px;color:var(--muted)">
+        <i class="bi bi-calendar-check" style="font-size:28px;color:var(--green-light)"></i>
+        <div style="font-size:13px;margin-top:8px">No absences recorded.</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Intervention plans -->
+    {% if interventions %}
+    <div class="card" style="padding:22px">
+      <div class="card-header-bar">
+        <div class="card-title"><i class="bi bi-clipboard-check-fill"></i> Intervention Plans</div>
+        {% if role in 'supervisor admin' %}
+        <a href="{% url 'intervention_create' student.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> New Plan</a>
+        {% endif %}
+      </div>
+      {% for plan in interventions %}
+      <div style="padding:14px;border-radius:10px;background:var(--bg);margin-bottom:10px;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span class="badge badge-{% if plan.state == 'draft' %}draft{% elif plan.state == 'active' %}low{% elif plan.state == 'follow_up' %}medium{% else %}closed{% endif %}">
+            {{ plan.state|upper }}
+          </span>
+          <span style="font-size:11px;color:var(--muted)">{{ plan.created_at|date:"d M Y" }} — {{ plan.created_by.username|default:"—" }}</span>
+        </div>
+        <p style="font-size:13px;color:var(--text);margin:0 0 8px">{{ plan.description }}</p>
+        {% if role in 'supervisor admin' and plan.state != 'closed' %}
+        <a href="{% url 'intervention_update' plan.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-arrow-right-circle"></i> Update State</a>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Activity Timeline -->
+    <div class="card" style="padding:22px">
+      <div class="card-title" style="margin-bottom:16px"><i class="bi bi-clock-history"></i> Activity Timeline</div>
+      {% for event in timeline %}
+      <div class="timeline-item">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="timeline-event">{{ event.get_action_display }}</div>
+          <span style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">{{ event.timestamp|date:"d M Y H:i" }}</span>
+        </div>
+        <div class="timeline-meta">by {{ event.user.username|default:"system" }} — {{ event.detail|truncatechars:80 }}</div>
+      </div>
+      {% empty %}
+      <p style="font-size:12px;color:var(--muted);text-align:center;padding:16px 0">No events yet.</p>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

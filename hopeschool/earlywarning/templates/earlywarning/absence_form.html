@@ -1,0 +1,28 @@
+{% extends 'earlywarning/base.html' %}
+{% block title %}Record Absence{% endblock %}
+{% block page_title %}Record Absence{% endblock %}
+{% block topbar_actions %}
+  <a href="{% url 'student_list' %}" class="btn btn-outline btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:520px;margin:0 auto">
+  <div class="card" style="padding:28px">
+    <div class="card-title" style="margin-bottom:24px"><i class="bi bi-calendar-x-fill"></i> Record Absence</div>
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group">
+        <label class="form-label">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<div style="color:var(--red);font-size:12px;margin-top:4px">{{ field.errors }}</div>{% endif %}
+      </div>
+      {% endfor %}
+      <div style="display:flex;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save Absence</button>
+        <a href="{% url 'student_list' %}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
